@@ -2,113 +2,113 @@
 // This module provides Web3 payment processing capabilities on the Bless Network
 // It integrates with the Web2 foundation payment system and mirrors its functionality
 
-// Global type declarations for Bless environment
-declare global {
-  interface Console {
-    log: (message?: any, ...optionalParams: any[]) => void;
-    error: (message?: any, ...optionalParams: any[]) => void;
-    warn: (message?: any, ...optionalParams: any[]) => void;
+import logger from './src/logger';
+import { BlessNetworkSDK } from './src/sdk';
+import { BlessPaymentProcessor } from './src/paymentProcessor';
+import { BlessWalletManager } from './src/walletManager';
+import { BlessEscrowService } from './src/escrowService';
+import {
+  Web2PaymentRequest,
+  BlessPaymentRequest,
+  BlessPaymentResponse,
+  BlessMilestone,
+  BlessNetworkConfig
+} from './src/types';
+
+// Main LancerPayBless Service
+export class LancerPayBless {
+  private sdk: BlessNetworkSDK;
+  private paymentProcessor: BlessPaymentProcessor;
+  private walletManager: BlessWalletManager;
+  private escrowService: BlessEscrowService;
+
+  constructor() {
+    this.sdk = new BlessNetworkSDK();
+    this.paymentProcessor = new BlessPaymentProcessor(this.sdk);
+    this.walletManager = new BlessWalletManager();
+    this.escrowService = new BlessEscrowService(this.sdk);
   }
-}
 
-// Logger implementation for Bless Network environment
-const logger = {
-  info: (message: string, ...args: any[]) => console.log(`[BLESS-INFO] ${message}`, ...args),
-  error: (message: string, ...args: any[]) => console.error(`[BLESS-ERROR] ${message}`, ...args),
-  warn: (message: string, ...args: any[]) => console.warn(`[BLESS-WARN] ${message}`, ...args)
-};
+  async initialize(): Promise<void> {
+    await this.sdk.initialize();
+    logger.info('LancerPayBless initialized successfully');
+  }
 
-// Core interfaces mirroring Web2 foundation
-interface Web2PaymentRequest {
-  requestId: string;
-  fromUserId: string;
-  toUserId?: string;
-  toEmail?: string;
-  tokenId: string;
-  amount: string;
-  description?: string;
-  dueDate?: string;
-  status: 'pending' | 'paid' | 'expired' | 'cancelled';
-  paymentTxId?: string;
-  invoiceNumber?: string;
-  metadata?: string;
-  createdAt: string;
-  paidAt?: string;
-}
+  async processPayment(request: BlessPaymentRequest): Promise<BlessPaymentResponse> {
+    logger.info('Processing payment request:', request.requestId);
+    if (request.metadata?.escrowType || request.metadata?.freelancerId) {
+      return await this.processEscrowPayment(request);
+    }
+    return await this.paymentProcessor.processDirectPayment(request);
+  }
 
-// Bless Network enhanced interfaces
-interface BlessPaymentRequest {
-  requestId: string;
-  amount: string;
-  tokenSymbol: 'BLS' | 'USDC' | 'ETH' | 'USDT' | 'BTC';
-  fromAddress: string;
-  toAddress: string;
-  description?: string;
-  metadata?: {
-    invoiceId?: string;
-    clientId?: string;
-    projectId?: string;
-    milestoneId?: string;
-    freelancerId?: string;
-    clientAddress?: string;
-    workDescription?: string;
-    deadlineTimestamp?: number;
-    escrowType?: 'milestone' | 'full' | 'partial';
-    web2PaymentId?: string;
-    web3LancerUserId?: string;
-    web2RequestId?: string;
-    freelancerProfileUrl?: string;
-  };
-}
+  private async processEscrowPayment(request: BlessPaymentRequest): Promise<BlessPaymentResponse> {
+    const escrowRequest = {
+      clientAddress: request.fromAddress,
+      freelancerAddress: request.toAddress,
+      amount: request.amount,
+      tokenSymbol: request.tokenSymbol as 'BLS' | 'USDC' | 'ETH',
+      projectId: request.metadata?.projectId || `project_${Date.now()}`,
+      description: request.description || 'Freelancer payment',
+      deadlineTimestamp: request.metadata?.deadlineTimestamp || Date.now() + (30 * 24 * 60 * 60 * 1000)
+    };
+    const escrowResult = await this.escrowService.createEscrow(escrowRequest);
+    if (!escrowResult.success) {
+      return {
+        success: false,
+        error: escrowResult.error || 'Failed to create escrow',
+        timestamp: Date.now(),
+        confirmations: 0
+      };
+    }
+    return {
+      success: true,
+      transactionId: escrowResult.transactionId,
+      escrowId: escrowResult.escrowId,
+      timestamp: Date.now(),
+      confirmations: 0
+    };
+  }
 
-interface BlessPaymentResponse {
-  success: boolean;
-  transactionId?: string;
-  blessHash?: string;
-  error?: string;
-  gasUsed?: string;
-  timestamp: number;
-  confirmations: number;
-  escrowId?: string;
-  networkFee?: string;
-}
+  async createWallet(): Promise<{ address: string; publicKey: string; mnemonic?: string }> {
+    const wallet = await this.walletManager.createWallet();
+    return {
+      address: wallet.address,
+      publicKey: wallet.publicKey,
+      mnemonic: wallet.mnemonic
+    };
+  }
 
-interface BlessEscrowRequest {
-  clientAddress: string;
-  freelancerAddress: string;
-  amount: string;
-  tokenSymbol: 'BLS' | 'USDC' | 'ETH';
-  projectId: string;
-  description: string;
-  deadlineTimestamp: number;
-  disputeResolver?: string;
-  milestones?: {
-    id: string;
-    description: string;
-    amount: string;
-    deadline: number;
-    deliverables: string[];
-  }[];
-}
+  async getPaymentStatus(transactionId: string): Promise<{ status: 'pending' | 'confirmed' | 'failed'; confirmations: number }> {
+    const receipt = await this.sdk.getTransactionReceipt(transactionId);
+    if (!receipt) {
+      return { status: 'pending', confirmations: 0 };
+    }
+    return {
+      status: receipt.status,
+      confirmations: receipt.status === 'confirmed' ? 6 : 0
+    };
+  }
 
-interface BlessEscrowResponse {
-  success: boolean;
-  escrowId?: string;
-  contractAddress?: string;
-  error?: string;
-  transactionId?: string;
-  estimatedReleaseDate?: number;
-}
+  async getEscrowStatus(escrowId: string): Promise<{ status: 'active' | 'completed' | 'disputed' | 'cancelled'; balance: string; milestones: BlessMilestone[] }> {
+    return await this.escrowService.getEscrowStatus(escrowId);
+  }
 
-interface BlessNetworkConfig {
-  networkName: string;
-  chainId: number;
-  rpcUrl: string;
-  explorerUrl: string;
-  nativeCurrency: {
-    name: string;
-    symbol: string;
-    decimals: number;
+  async bridgeWeb2PaymentRequest(web2Request: Web2PaymentRequest): Promise<BlessPaymentRequest> {
+    return {
+      requestId: web2Request.requestId,
+      amount: web2Request.amount,
+      tokenSymbol: web2Request.tokenId.toUpperCase() as 'BLS' | 'USDC' | 'ETH' | 'USDT' | 'BTC',
+      fromAddress: '',
+      toAddress: '',
+      description: web2Request.description,
+      metadata: {
+        web2PaymentId: web2Request.requestId,
+        web2RequestId: web2Request.requestId,
+        invoiceId: web2Request.invoiceNumber
+      }
+    };
+  }
   };
   supportedTokens: {
     symbol: string;
