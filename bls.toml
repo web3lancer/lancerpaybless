@@ -1,6 +1,7 @@
-name = "template_name"
+name = "lancerpaybless"
 version = "1.0.0"
-type = "text"
+type = "application"
+production_host = "coral-earwig-verene-2jkylule.bls.dev"
 
 [deployment]
 permission = "public"
@@ -8,10 +9,20 @@ nodes = 1
 
 [build]
 dir = "build"
-entry = "template_name_debug.wasm"
+entry = "lancerpaybless_debug.wasm"
 command = "npm run build:debug"
 
 [build_release]
 dir = "build"
-entry = "template_name.wasm"
+entry = "lancerpaybless.wasm"
 command = "npm run build:release"
+
+[[deployments]]
+name = "blessnet"
+description = ""
+cid = "bafybeieudwmhfslml6uy6do4hhfpwoql72qnt6xm44xl3xpkvr2jkylule"
+created = "2025-06-02T08:54:21.126Z"
+
+  [deployments.runtime]
+  url = "blessnet.tar.gz"
+  checksum = "7f367862e600592250848be8e68297e4aa8eef5a6034ea98f9efac483b332f59"
