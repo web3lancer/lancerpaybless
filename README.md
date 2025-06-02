@@ -60,7 +60,7 @@ cp .env.example.bless .env.local
 npm run build
 
 # Deploy to Blockless Network
-blockless deploy
+blessnet deploy
 ```
 
 ### 3. Update Web2 App
