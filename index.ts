@@ -7,6 +7,7 @@ import { BlessNetworkSDK } from './src/sdk';
 import { BlessPaymentProcessor } from './src/paymentProcessor';
 import { BlessWalletManager } from './src/walletManager';
 import { BlessEscrowService } from './src/escrowService';
+import { LancerPayBridge } from './src/bridge';
 import {
   Web2PaymentRequest,
   BlessPaymentRequest,
@@ -21,16 +22,32 @@ export class LancerPayBless {
   private paymentProcessor: BlessPaymentProcessor;
   private walletManager: BlessWalletManager;
   private escrowService: BlessEscrowService;
+  private bridge?: LancerPayBridge;
 
-  constructor() {
+  constructor(bridgeConfig?: {
+    web2PayApp: { baseUrl: string; apiKey?: string };
+    autoProcessEscrow?: boolean;
+    defaultEscrowDuration?: number;
+  }) {
     this.sdk = new BlessNetworkSDK();
     this.paymentProcessor = new BlessPaymentProcessor(this.sdk);
     this.walletManager = new BlessWalletManager();
     this.escrowService = new BlessEscrowService(this.sdk);
+    
+    if (bridgeConfig) {
+      this.bridge = new LancerPayBridge({
+        web2PayApp: bridgeConfig.web2PayApp,
+        autoProcessEscrow: bridgeConfig.autoProcessEscrow ?? true,
+        defaultEscrowDuration: bridgeConfig.defaultEscrowDuration ?? 30
+      });
+    }
   }
 
   async initialize(): Promise<void> {
     await this.sdk.initialize();
+    if (this.bridge) {
+      await this.bridge.initialize();
+    }
     logger.info('LancerPayBless initialized successfully');
   }
 
@@ -112,6 +129,45 @@ export class LancerPayBless {
 
   getNetworkConfig(): BlessNetworkConfig {
     return this.sdk.getConfig();
+  }
+
+  // Bridge methods for Web2 integration
+  async syncWeb2Payment(web2RequestId: string): Promise<BlessPaymentResponse> {
+    if (!this.bridge) {
+      throw new Error('Bridge not configured. Initialize with bridgeConfig to use Web2 integration.');
+    }
+    return await this.bridge.syncWeb2PaymentRequest(web2RequestId);
+  }
+
+  async createFreelancerEscrow(web2RequestId: string, freelancerData: {
+    freelancerAddress: string;
+    projectId: string;
+    milestones?: Array<{
+      id: string;
+      description: string;
+      amount: string;
+      deadline: number;
+      deliverables: string[];
+    }>;
+  }): Promise<BlessPaymentResponse> {
+    if (!this.bridge) {
+      throw new Error('Bridge not configured. Initialize with bridgeConfig to use Web2 integration.');
+    }
+    return await this.bridge.createFreelancerEscrow(web2RequestId, freelancerData);
+  }
+
+  async releaseFreelancerPayment(escrowId: string, milestoneId?: string): Promise<void> {
+    if (!this.bridge) {
+      throw new Error('Bridge not configured. Initialize with bridgeConfig to use Web2 integration.');
+    }
+    return await this.bridge.releaseFreelancerPayment(escrowId, milestoneId);
+  }
+
+  async handleIncomingBlessPayment(blessPayment: BlessPaymentRequest): Promise<void> {
+    if (!this.bridge) {
+      throw new Error('Bridge not configured. Initialize with bridgeConfig to use Web2 integration.');
+    }
+    return await this.bridge.handleBlessPayment(blessPayment);
   }
 }
 

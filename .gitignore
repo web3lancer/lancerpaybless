@@ -6,3 +6,4 @@ build/
 tsbuildinfo
 *tsbuildinfo*
 bless-deploy.key
+.env
