@@ -2,6 +2,7 @@
 // This module provides Web3 payment processing capabilities on the Bless Network
 // It integrates with the Web2 foundation payment system and mirrors its functionality
 
+// Global type declarations for Bless environment
 declare global {
   interface Console {
     log: (message?: any, ...optionalParams: any[]) => void;
@@ -10,14 +11,14 @@ declare global {
   }
 }
 
-// Simple logger implementation for Bless Network environment
+// Logger implementation for Bless Network environment
 const logger = {
   info: (message: string, ...args: any[]) => console.log(`[BLESS-INFO] ${message}`, ...args),
   error: (message: string, ...args: any[]) => console.error(`[BLESS-ERROR] ${message}`, ...args),
   warn: (message: string, ...args: any[]) => console.warn(`[BLESS-WARN] ${message}`, ...args)
 };
 
-// Core interfaces mirroring Web2 foundation with Bless Network enhancements
+// Core interfaces mirroring Web2 foundation
 interface Web2PaymentRequest {
   requestId: string;
   fromUserId: string;
@@ -35,69 +36,7 @@ interface Web2PaymentRequest {
   paidAt?: string;
 }
 
-interface BlessPaymentRequest {
-  requestId: string;
-  amount: string;
-  tokenSymbol: 'BLS' | 'USDC' | 'ETH' | 'USDT' | 'BTC';
-  fromAddress: string;
-  toAddress: string;
-  description?: string;
-  metadata?: {
-    invoiceId?: string;
-    clientId?: string;
-    projectId?: string;
-    milestoneId?: string;
-    freelancerId?: string;
-    clientAddress?: string;
-    workDescription?: string;
-    deadlineTimestamp?: number;
-    escrowType?: 'milestone' | 'full' | 'partial';
-    web2PaymentId?: string;
-    web3LancerUserId?: string;
-    web2RequestId?: string;
-    freelancerProfileUrl?: string;ng;
-  };
-}
-
-interface PaymentResponse {
-  success: boolean;
-  transactionId?: string;
-  blockHash?: string;
-  error?: string;
-  gasUsed?: string;
-  timestamp: number;
-  confirmations: number;
-  escrowId?: string;
-  networkFee?: string;
-}
-
-interface EscrowRequest {
-  clientAddress: string;
-  freelancerAddress: string;
-  amount: string;
-  tokenSymbol?: string;
-  projectId: string;
-  description: string;
-  deadlineTimestamp: number;
-  disputeResolver?: string;
-  milestones?: {
-    id: string;
-    description: string;
-    amount: string;
-    deadline: number;
-    deliverables: string[];
-  }[];
-}
-
-interface EscrowResponse {
-  success: boolean;
-  escrowId?: string;
-  contractAddress?: string;
-  error?: string;
-  transactionId?: string;
-  estimatedReleaseDate?: number;
-}
-
+// Bless Network enhanced interfaces
 interface BlessPaymentRequest {
   requestId: string;
   amount: string;
@@ -122,36 +61,19 @@ interface BlessPaymentRequest {
   };
 }
 
-// Extended Payment Request for Web2/Web3 bridge
-interface BlessExtendedPaymentRequest extends BlessPaymentRequest {
-  requestId: string;
-  fromUserId: string;
-  toUserId?: string;
-  toEmail?: string;
-  dueDate?: string;
-  status: 'pending' | 'paid' | 'expired' | 'cancelled';
-  paymentTxId?: string;
-  invoiceNumber?: string;
-  createdAt: string;
-  paidAt?: string;
-  blessHash?: string;
-  escrowId?: string;
-  networkFee?: string;
-}
-
 interface BlessPaymentResponse {
   success: boolean;
   transactionId?: string;
   blessHash?: string;
   error?: string;
-  gasUsed?: number;
+  gasUsed?: string;
   timestamp: number;
   confirmations: number;
   escrowId?: string;
   networkFee?: string;
 }
 
-interface FreelancerEscrowRequest {
+interface BlessEscrowRequest {
   clientAddress: string;
   freelancerAddress: string;
   amount: string;
@@ -169,7 +91,7 @@ interface FreelancerEscrowRequest {
   }[];
 }
 
-interface FreelancerEscrowResponse {
+interface BlessEscrowResponse {
   success: boolean;
   escrowId?: string;
   contractAddress?: string;
@@ -195,7 +117,6 @@ interface BlessNetworkConfig {
   }[];
 }
 
-// Bless Network specific interfaces
 interface BlessWallet {
   address: string;
   publicKey: string;
@@ -217,8 +138,8 @@ interface BlessTransaction {
   gasPrice: string;
   timestamp: number;
   status: 'pending' | 'confirmed' | 'failed';
-  tokenSymbol: string;
-  type: 'send' | 'receive' | 'swap' | 'escrow';
+  tokenSymbol?: string;
+  type?: 'send' | 'receive' | 'swap' | 'escrow';
 }
 
 interface BlessEscrowContract {
@@ -245,24 +166,6 @@ interface BlessMilestone {
   approvedAt?: number;
 }
 
-// Exchange and rate interfaces
-interface BlessExchangeRate {
-  fromToken: string;
-  toToken: string;
-  rate: number;
-  lastUpdated: number;
-  source: string;
-}
-
-interface BlessSwapRequest {
-  fromToken: string;
-  toToken: string;
-  fromAmount: string;
-  minToAmount: string;
-  slippage: number;
-  userAddress: string;
-}
-
 // Bless Network SDK Implementation
 class BlessNetworkSDK {
   private config: BlessNetworkConfig;
@@ -278,12 +181,19 @@ class BlessNetworkSDK {
         name: 'Bless',
         symbol: 'BLS',
         decimals: 18
-      }
+      },
+      supportedTokens: [
+        { symbol: 'BLS', address: '0x0000000000000000000000000000000000000000', decimals: 18 },
+        { symbol: 'USDC', address: '0xa0b86991c431e1d7dbf0be1a3bc25a9b4c6e70b2', decimals: 6 },
+        { symbol: 'ETH', address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', decimals: 18 }
+      ]
     };
   }
 
   async initialize(): Promise<void> {
     logger.info('Initializing Bless Network SDK...');
+    // Simulate network connection and validation
+    await new Promise(resolve => setTimeout(resolve, 100));
     this.isInitialized = true;
     logger.info('Bless Network SDK initialized successfully');
   }
@@ -293,12 +203,13 @@ class BlessNetworkSDK {
   }
 
   async getBlockNumber(): Promise<number> {
-    // Mock implementation - in real scenario, call Bless Network RPC
+    // In production, this would call Bless Network RPC
     return Math.floor(Date.now() / 1000);
   }
 
   async getTransactionReceipt(txHash: string): Promise<BlessTransaction | null> {
-    // Mock implementation for demonstration
+    if (!txHash) return null;
+    
     return {
       hash: txHash,
       blockNumber: await this.getBlockNumber(),
@@ -308,17 +219,42 @@ class BlessNetworkSDK {
       gasUsed: '21000',
       gasPrice: '20000000000',
       timestamp: Date.now(),
-      status: 'success'
+      status: 'confirmed',
+      tokenSymbol: 'BLS',
+      type: 'send'
     };
+  }
+
+  async estimateGas(params: {
+    from: string;
+    to: string;
+    value: string;
+    data?: string;
+  }): Promise<number> {
+    // Base gas for simple transfer
+    const baseGas = 21000;
+    // Additional gas for contract interaction
+    const contractGas = params.data ? 45000 : 0;
+    return baseGas + contractGas;
+  }
+
+  async getBalance(address: string, tokenSymbol: string = 'BLS'): Promise<string> {
+    // Mock balance - in production, query actual balance
+    const mockBalances: { [key: string]: string } = {
+      'BLS': '1000.0',
+      'USDC': '500.0',
+      'ETH': '2.5'
+    };
+    return mockBalances[tokenSymbol] || '0.0';
   }
 }
 
 // Payment Processor for Bless Network
-class PaymentProcessor {
-  private blessSDK: BlessNetworkSDK;
+class BlessPaymentProcessor {
+  private sdk: BlessNetworkSDK;
 
-  constructor(blessSDK: BlessNetworkSDK) {
-    this.blessSDK = blessSDK;
+  constructor(sdk: BlessNetworkSDK) {
+    this.sdk = sdk;
   }
 
   async validatePayment(request: BlessPaymentRequest): Promise<{ isValid: boolean; error?: string }> {
@@ -327,49 +263,122 @@ class PaymentProcessor {
     }
 
     if (!request.fromAddress || !request.toAddress) {
-      return { isValid: false, error: 'Invalid addresses' };
+      return { isValid: false, error: 'Missing wallet addresses' };
     }
 
-    if (!['BLS', 'USDC', 'ETH'].includes(request.tokenSymbol)) {
-      return { isValid: false, error: 'Unsupported token' };
+    if (request.fromAddress === request.toAddress) {
+      return { isValid: false, error: 'Cannot send to same address' };
+    }
+
+    const supportedTokens = this.sdk.getConfig().supportedTokens.map(t => t.symbol);
+    if (!supportedTokens.includes(request.tokenSymbol)) {
+      return { isValid: false, error: `Unsupported token: ${request.tokenSymbol}` };
     }
 
     return { isValid: true };
   }
 
-  async estimateGas(request: BlessPaymentRequest): Promise<number> {
-    // Mock gas estimation
-    const baseGas = 21000;
-    const tokenGas = request.tokenSymbol === 'BLS' ? 0 : 45000;
-    return baseGas + tokenGas;
-  }
-
-  async calculateNetworkFee(gasLimit: number): Promise<string> {
-    const gasPrice = '20000000000'; // 20 gwei in wei
+  async calculateNetworkFee(gasLimit: number, gasPrice: string = '20000000000'): Promise<string> {
     const fee = BigInt(gasLimit) * BigInt(gasPrice);
     return fee.toString();
+  }
+
+  async processDirectPayment(request: BlessPaymentRequest): Promise<BlessPaymentResponse> {
+    try {
+      const validation = await this.validatePayment(request);
+      if (!validation.isValid) {
+        return {
+          success: false,
+          error: validation.error,
+          timestamp: Date.now(),
+          confirmations: 0
+        };
+      }
+
+      // Estimate gas
+      const gasLimit = await this.sdk.estimateGas({
+        from: request.fromAddress,
+        to: request.toAddress,
+        value: request.amount
+      });
+
+      const networkFee = await this.calculateNetworkFee(gasLimit);
+
+      // Simulate transaction creation and submission
+      const txHash = `0x${Math.random().toString(16).substring(2, 66)}`;
+      
+      logger.info(`Processing direct payment: ${request.amount} ${request.tokenSymbol} from ${request.fromAddress} to ${request.toAddress}`);
+
+      return {
+        success: true,
+        transactionId: txHash,
+        blessHash: txHash,
+        gasUsed: gasLimit.toString(),
+        networkFee,
+        timestamp: Date.now(),
+        confirmations: 0
+      };
+
+    } catch (error) {
+      logger.error('Direct payment processing failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: Date.now(),
+        confirmations: 0
+      };
+    }
   }
 }
 
 // Wallet Manager for Bless Network
-class WalletManager {
+class BlessWalletManager {
   private wallets: Map<string, BlessWallet> = new Map();
 
-  async initialize(): Promise<void> {
-    logger.info('Initializing Wallet Manager...');
-  }
-
   async createWallet(): Promise<BlessWallet> {
-    // Mock wallet creation - in real implementation, use proper crypto libraries
+    // In production, use proper cryptographic libraries
+    const address = `0x${Math.random().toString(16).substring(2, 42)}`;
+    const publicKey = `0x${Math.random().toString(16).substring(2, 66)}`;
+    const privateKey = `0x${Math.random().toString(16).substring(2, 66)}`;
+    
     const wallet: BlessWallet = {
-      address: `0x${Math.random().toString(16).substring(2, 42)}`,
-      publicKey: `0x${Math.random().toString(16).substring(2, 66)}`,
-      privateKey: `0x${Math.random().toString(16).substring(2, 66)}`,
-      isConnected: true
+      address,
+      publicKey,
+      privateKey,
+      mnemonic: this.generateMnemonic(),
+      isConnected: true,
+      balance: {
+        'BLS': '0.0',
+        'USDC': '0.0',
+        'ETH': '0.0'
+      }
     };
 
-    this.wallets.set(wallet.address, wallet);
-    logger.info(`Created new wallet: ${wallet.address}`);
+    this.wallets.set(address, wallet);
+    logger.info(`Created new Bless wallet: ${address}`);
+    
+    return wallet;
+  }
+
+  async importWallet(privateKey: string): Promise<BlessWallet> {
+    // In production, derive address from private key
+    const address = `0x${Math.random().toString(16).substring(2, 42)}`;
+    const publicKey = `0x${Math.random().toString(16).substring(2, 66)}`;
+    
+    const wallet: BlessWallet = {
+      address,
+      publicKey,
+      privateKey,
+      isConnected: true,
+      balance: {
+        'BLS': '0.0',
+        'USDC': '0.0',
+        'ETH': '0.0'
+      }
+    };
+
+    this.wallets.set(address, wallet);
+    logger.info(`Imported Bless wallet: ${address}`);
     
     return wallet;
   }
@@ -378,230 +387,176 @@ class WalletManager {
     return this.wallets.get(address) || null;
   }
 
-  async connectWallet(address: string): Promise<boolean> {
+  async updateWalletBalance(address: string, tokenSymbol: string, balance: string): Promise<void> {
     const wallet = this.wallets.get(address);
     if (wallet) {
-      wallet.isConnected = true;
-      return true;
+      wallet.balance[tokenSymbol] = balance;
     }
-    return false;
+  }
+
+  private generateMnemonic(): string {
+    // Mock mnemonic generation - use proper library in production
+    const words = ['abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract', 'absurd', 'abuse', 'access', 'accident'];
+    return Array.from({ length: 12 }, () => words[Math.floor(Math.random() * words.length)]).join(' ');
   }
 }
 
-// Transaction Handler for Bless Network
-class TransactionHandler {
-  private blessSDK: BlessNetworkSDK;
-
-  constructor(blessSDK: BlessNetworkSDK) {
-    this.blessSDK = blessSDK;
-  }
-
-  async executeTransaction(params: {
-    from: string;
-    to: string;
-    amount: string;
-    tokenId: string;
-    data?: string;
-    metadata?: any;
-  }): Promise<BlessTransaction> {
-    logger.info(`Executing transaction from ${params.from} to ${params.to}`);
-
-    // Mock transaction execution
-    const txHash = `0x${Math.random().toString(16).substring(2, 66)}`;
-    const transaction: BlessTransaction = {
-      hash: txHash,
-      blockNumber: await this.blessSDK.getBlockNumber(),
-      from: params.from,
-      to: params.to,
-      value: params.amount,
-      gasUsed: '21000',
-      gasPrice: '20000000000',
-      timestamp: Date.now(),
-      status: 'pending'
-    };
-
-    // Simulate transaction confirmation after 3 seconds
-    setTimeout(() => {
-      transaction.status = 'success';
-      logger.info(`Transaction confirmed: ${txHash}`);
-    }, 3000);
-
-    return transaction;
-  }
-
-  async getTransactionStatus(txHash: string): Promise<{
-    status: 'pending' | 'confirmed' | 'failed';
-    confirmations: number;
-  }> {
-    const receipt = await this.blessSDK.getTransactionReceipt(txHash);
-    if (!receipt) {
-      return { status: 'pending', confirmations: 0 };
-    }
-
-    return {
-      status: receipt.status === 'success' ? 'confirmed' : 'failed',
-      confirmations: receipt.status === 'success' ? 6 : 0
-    };
-  }
-}
-
-// Freelancer Payment Service
-class FreelancerPaymentService {
-  private blessSDK: BlessNetworkSDK;
-
-  constructor(blessSDK: BlessNetworkSDK) {
-    this.blessSDK = blessSDK;
-  }
-
-  async initialize(): Promise<void> {
-    logger.info('Initializing Freelancer Payment Service...');
-  }
-
-  async createEscrowContract(request: FreelancerEscrowRequest): Promise<BlessEscrowContract> {
-    logger.info(`Creating escrow contract for project: ${request.projectId}`);
-
-    const contractAddress = `0x${Math.random().toString(16).substring(2, 42)}`;
-    const milestones: BlessMilestone[] = request.milestones?.map(m => ({
-      id: m.id,
-      amount: m.amount,
-      deadline: m.deadline,
-      completed: false,
-      approved: false,
-      deliverables: m.deliverables
-    })) || [];
-
-    return {
-      address: contractAddress,
-      clientAddress: request.clientAddress,
-      freelancerAddress: request.freelancerAddress,
-      amount: request.amount,
-      token: request.tokenSymbol,
-      deadline: request.deadlineTimestamp,
-      status: 'active',
-      milestones
-    };
-  }
-
-  async releaseMilestonePayment(escrowId: string, milestoneId: string): Promise<BlessTransaction> {
-    logger.info(`Releasing milestone payment: ${milestoneId} for escrow: ${escrowId}`);
-
-    return {
-      hash: `0x${Math.random().toString(16).substring(2, 66)}`,
-      blockNumber: await this.blessSDK.getBlockNumber(),
-      from: escrowId,
-      to: '0x0000000000000000000000000000000000000000',
-      value: '0',
-      gasUsed: '45000',
-      gasPrice: '20000000000',
-      timestamp: Date.now(),
-      status: 'pending'
-    };
-  }
-}
-
-// Escrow Service
-class EscrowService {
-  private blessSDK: BlessNetworkSDK;
+// Escrow Service for Freelancer Payments
+class BlessEscrowService {
+  private sdk: BlessNetworkSDK;
   private escrows: Map<string, BlessEscrowContract> = new Map();
 
-  constructor(blessSDK: BlessNetworkSDK) {
-    this.blessSDK = blessSDK;
+  constructor(sdk: BlessNetworkSDK) {
+    this.sdk = sdk;
   }
 
-  async initialize(): Promise<void> {
-    logger.info('Initializing Escrow Service...');
+  async createEscrow(request: BlessEscrowRequest): Promise<BlessEscrowResponse> {
+    try {
+      const escrowId = `escrow_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      const contractAddress = `0x${Math.random().toString(16).substring(2, 42)}`;
+      
+      const contract: BlessEscrowContract = {
+        address: contractAddress,
+        clientAddress: request.clientAddress,
+        freelancerAddress: request.freelancerAddress,
+        amount: request.amount,
+        token: request.tokenSymbol,
+        deadline: request.deadlineTimestamp,
+        status: 'active',
+        milestones: request.milestones?.map(m => ({
+          id: m.id,
+          amount: m.amount,
+          deadline: m.deadline,
+          completed: false,
+          approved: false,
+          deliverables: m.deliverables
+        })) || [],
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+
+      this.escrows.set(escrowId, contract);
+      
+      // Simulate contract deployment transaction
+      const txHash = `0x${Math.random().toString(16).substring(2, 66)}`;
+      
+      logger.info(`Created escrow contract ${escrowId} for project ${request.projectId}`);
+
+      return {
+        success: true,
+        escrowId,
+        contractAddress,
+        transactionId: txHash,
+        estimatedReleaseDate: request.deadlineTimestamp
+      };
+
+    } catch (error) {
+      logger.error('Escrow creation failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create escrow'
+      };
+    }
   }
 
-  async createEscrow(request: FreelancerEscrowRequest): Promise<string> {
-    const escrowId = `escrow_${Math.random().toString(36).substring(2, 15)}`;
-    const contract: BlessEscrowContract = {
-      address: `0x${Math.random().toString(16).substring(2, 42)}`,
-      clientAddress: request.clientAddress,
-      freelancerAddress: request.freelancerAddress,
-      amount: request.amount,
-      token: request.tokenSymbol,
-      deadline: request.deadlineTimestamp,
-      status: 'active',
-      milestones: request.milestones?.map(m => ({
-        id: m.id,
-        amount: m.amount,
-        deadline: m.deadline,
-        completed: false,
-        approved: false,
-        deliverables: m.deliverables
-      })) || []
-    };
+  async releaseEscrow(escrowId: string): Promise<BlessTransaction> {
+    const contract = this.escrows.get(escrowId);
+    if (!contract) {
+      throw new Error('Escrow contract not found');
+    }
 
-    this.escrows.set(escrowId, contract);
-    logger.info(`Created escrow contract: ${escrowId}`);
+    contract.status = 'completed';
+    contract.updatedAt = Date.now();
+
+    const txHash = `0x${Math.random().toString(16).substring(2, 66)}`;
     
-    return escrowId;
+    logger.info(`Released escrow ${escrowId} - ${contract.amount} ${contract.token} to ${contract.freelancerAddress}`);
+
+    return {
+      hash: txHash,
+      blockNumber: await this.sdk.getBlockNumber(),
+      from: contract.address,
+      to: contract.freelancerAddress,
+      value: contract.amount,
+      gasUsed: '75000',
+      gasPrice: '20000000000',
+      timestamp: Date.now(),
+      status: 'pending',
+      tokenSymbol: contract.token,
+      type: 'escrow'
+    };
   }
 
   async getEscrowStatus(escrowId: string): Promise<{
     status: 'active' | 'completed' | 'disputed' | 'cancelled';
     balance: string;
-    milestones: any[];
+    milestones: BlessMilestone[];
   }> {
-    const escrow = this.escrows.get(escrowId);
-    if (!escrow) {
-      throw new Error('Escrow not found');
+    const contract = this.escrows.get(escrowId);
+    if (!contract) {
+      throw new Error('Escrow contract not found');
     }
 
     return {
-      status: escrow.status,
-      balance: escrow.amount,
-      milestones: escrow.milestones
+      status: contract.status,
+      balance: contract.amount,
+      milestones: contract.milestones
     };
   }
 
-  async releaseEscrow(escrowId: string): Promise<BlessTransaction> {
-    const escrow = this.escrows.get(escrowId);
-    if (!escrow) {
-      throw new Error('Escrow not found');
+  async releaseMilestone(escrowId: string, milestoneId: string): Promise<BlessTransaction> {
+    const contract = this.escrows.get(escrowId);
+    if (!contract) {
+      throw new Error('Escrow contract not found');
     }
 
-    escrow.status = 'completed';
-    logger.info(`Released escrow: ${escrowId}`);
+    const milestone = contract.milestones.find(m => m.id === milestoneId);
+    if (!milestone) {
+      throw new Error('Milestone not found');
+    }
+
+    milestone.completed = true;
+    milestone.approved = true;
+    milestone.approvedAt = Date.now();
+    contract.updatedAt = Date.now();
+
+    const txHash = `0x${Math.random().toString(16).substring(2, 66)}`;
+    
+    logger.info(`Released milestone ${milestoneId} from escrow ${escrowId}`);
 
     return {
-      hash: `0x${Math.random().toString(16).substring(2, 66)}`,
-      blockNumber: await this.blessSDK.getBlockNumber(),
-      from: escrow.address,
-      to: escrow.freelancerAddress,
-      value: escrow.amount,
-      gasUsed: '45000',
+      hash: txHash,
+      blockNumber: await this.sdk.getBlockNumber(),
+      from: contract.address,
+      to: contract.freelancerAddress,
+      value: milestone.amount,
+      gasUsed: '65000',
       gasPrice: '20000000000',
       timestamp: Date.now(),
-      status: 'pending'
+      status: 'pending',
+      tokenSymbol: contract.token,
+      type: 'escrow'
     };
   }
 }
 
-// Main LancerPayBless Class
-class LancerPayBless {
-  private blessSDK: BlessNetworkSDK;
-  private paymentProcessor: PaymentProcessor;
-  private walletManager: WalletManager;
-  private transactionHandler: TransactionHandler;
-  private freelancerPaymentService: FreelancerPaymentService;
-  private escrowService: EscrowService;
+// Main LancerPayBless Service
+export class LancerPayBless {
+  private sdk: BlessNetworkSDK;
+  private paymentProcessor: BlessPaymentProcessor;
+  private walletManager: BlessWalletManager;
+  private escrowService: BlessEscrowService;
 
   constructor() {
-    this.blessSDK = new BlessNetworkSDK();
-    this.walletManager = new WalletManager();
-    this.paymentProcessor = new PaymentProcessor(this.blessSDK);
-    this.transactionHandler = new TransactionHandler(this.blessSDK);
-    this.freelancerPaymentService = new FreelancerPaymentService(this.blessSDK);
-    this.escrowService = new EscrowService(this.blessSDK);
+    this.sdk = new BlessNetworkSDK();
+    this.paymentProcessor = new BlessPaymentProcessor(this.sdk);
+    this.walletManager = new BlessWalletManager();
+    this.escrowService = new BlessEscrowService(this.sdk);
   }
 
   async initialize(): Promise<void> {
     try {
-      await this.blessSDK.initialize();
-      await this.walletManager.initialize();
-      await this.freelancerPaymentService.initialize();
-      await this.escrowService.initialize();
+      await this.sdk.initialize();
       logger.info('LancerPayBless initialized successfully');
     } catch (error) {
       logger.error('Failed to initialize LancerPayBless:', error);
@@ -609,44 +564,18 @@ class LancerPayBless {
     }
   }
 
-  async processPayment(request: PaymentRequest): Promise<PaymentResponse> {
+  // Payment Processing Methods
+  async processPayment(request: BlessPaymentRequest): Promise<BlessPaymentResponse> {
     try {
-      logger.info('Processing payment request:', request);
+      logger.info('Processing payment request:', request.requestId);
 
-      // Validate payment request
-      const validation = await this.paymentProcessor.validatePayment(request);
-      if (!validation.isValid) {
-        return {
-          success: false,
-          error: validation.error || 'Invalid payment request',
-          timestamp: Date.now(),
-          confirmations: 0
-        };
+      // Check if this requires escrow (freelancer payment)
+      if (request.metadata?.escrowType || request.metadata?.freelancerId) {
+        return await this.processEscrowPayment(request);
       }
 
-      // Check if this is a freelancer payment with escrow
-      if (request.metadata?.freelancerId && request.metadata?.clientAddress) {
-        return await this.processFreelancerPayment(request);
-      }
-
-      // Execute regular payment transaction
-      const transaction = await this.transactionHandler.executeTransaction({
-        from: request.fromAddress,
-        to: request.toAddress,
-        amount: request.amount,
-        tokenId: request.tokenId,
-        data: request.description || '',
-        metadata: request.metadata
-      });
-
-      return {
-        success: true,
-        transactionId: transaction.hash,
-        blockHash: transaction.blockHash,
-        gasUsed: transaction.gasUsed,
-        timestamp: Date.now(),
-        confirmations: 0
-      };
+      // Process direct payment
+      return await this.paymentProcessor.processDirectPayment(request);
 
     } catch (error) {
       logger.error('Payment processing failed:', error);
@@ -659,20 +588,19 @@ class LancerPayBless {
     }
   }
 
-  async processFreelancerPayment(request: PaymentRequest): Promise<PaymentResponse> {
+  private async processEscrowPayment(request: BlessPaymentRequest): Promise<BlessPaymentResponse> {
     try {
-      logger.info('Processing freelancer payment with escrow:', request);
-
-      const escrowRequest: EscrowRequest = {
-        clientAddress: request.metadata?.clientAddress || request.fromAddress,
+      const escrowRequest: BlessEscrowRequest = {
+        clientAddress: request.fromAddress,
         freelancerAddress: request.toAddress,
         amount: request.amount,
-        projectId: request.metadata?.projectId || 'default',
+        tokenSymbol: request.tokenSymbol as 'BLS' | 'USDC' | 'ETH',
+        projectId: request.metadata?.projectId || `project_${Date.now()}`,
         description: request.description || 'Freelancer payment',
-        deadlineTimestamp: request.metadata?.deadlineTimestamp || Date.now() + (30 * 24 * 60 * 60 * 1000) // 30 days default
+        deadlineTimestamp: request.metadata?.deadlineTimestamp || Date.now() + (30 * 24 * 60 * 60 * 1000)
       };
 
-      const escrowResult = await this.createEscrow(escrowRequest);
+      const escrowResult = await this.escrowService.createEscrow(escrowRequest);
       
       if (!escrowResult.success) {
         return {
@@ -692,7 +620,7 @@ class LancerPayBless {
       };
 
     } catch (error) {
-      logger.error('Freelancer payment processing failed:', error);
+      logger.error('Escrow payment processing failed:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -702,8 +630,79 @@ class LancerPayBless {
     }
   }
 
-  async createEscrow(request: EscrowRequest): Promise<EscrowResponse> {
+  // Wallet Management Methods
+  async createWallet(): Promise<{
+    address: string;
+    publicKey: string;
+    mnemonic?: string;
+  }> {
+    const wallet = await this.walletManager.createWallet();
+    return {
+      address: wallet.address,
+      publicKey: wallet.publicKey,
+      mnemonic: wallet.mnemonic
+    };
+  }
+
+  async getPaymentStatus(transactionId: string): Promise<{
+    status: 'pending' | 'confirmed' | 'failed';
+    confirmations: number;
+  }> {
     try {
+      const receipt = await this.sdk.getTransactionReceipt(transactionId);
+      if (!receipt) {
+        return { status: 'pending', confirmations: 0 };
+      }
+
+      return {
+        status: receipt.status,
+        confirmations: receipt.status === 'confirmed' ? 6 : 0
+      };
+    } catch (error) {
+      logger.error('Failed to get payment status:', error);
+      return { status: 'failed', confirmations: 0 };
+    }
+  }
+
+  async getEscrowStatus(escrowId: string): Promise<{
+    status: 'active' | 'completed' | 'disputed' | 'cancelled';
+    balance: string;
+    milestones: BlessMilestone[];
+  }> {
+    return await this.escrowService.getEscrowStatus(escrowId);
+  }
+
+  // Bridge method to connect with Web2 foundation
+  async bridgeWeb2PaymentRequest(web2Request: Web2PaymentRequest): Promise<BlessPaymentRequest> {
+    return {
+      requestId: web2Request.requestId,
+      amount: web2Request.amount,
+      tokenSymbol: web2Request.tokenId.toUpperCase() as 'BLS' | 'USDC' | 'ETH' | 'USDT' | 'BTC',
+      fromAddress: '', // To be filled by wallet connection
+      toAddress: '', // To be filled by recipient wallet
+      description: web2Request.description,
+      metadata: {
+        web2PaymentId: web2Request.requestId,
+        web2RequestId: web2Request.requestId,
+        invoiceId: web2Request.invoiceNumber
+      }
+    };
+  }
+
+  // Get network configuration
+  getNetworkConfig(): BlessNetworkConfig {
+    return this.sdk.getConfig();
+  }
+}
+
+// Default export for the main service
+export default LancerPayBless;
+
+// Initialize and export instance
+const lancerPayBless = new LancerPayBless();
+
+// Export for immediate use
+export { lancerPayBless };
       logger.info('Creating escrow contract:', request);
       
       const escrowResult = await this.escrowService.createEscrow(request);
