@@ -7,3 +7,5 @@ tsbuildinfo
 *tsbuildinfo*
 bless-deploy.key
 .env
+
+docx/

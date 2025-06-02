@@ -173,5 +173,135 @@ export class LancerPayBless {
 
 export default LancerPayBless;
 
+// Blockless Function Handler
+async function handleRequest(request?: any): Promise<string> {
+  try {
+    // Check if this is a web browser request
+    const userAgent = request?.headers?.['user-agent'] || '';
+    const acceptHeader = request?.headers?.['accept'] || '';
+    const isWebBrowser = acceptHeader.includes('text/html') || userAgent.includes('Mozilla');
+    
+    if (isWebBrowser) {
+      // Return HTML interface for web browsers
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LancerPayBless - Bless Network</title>
+    <style>
+        body { font-family: 'Courier New', monospace; background: #0a0a0a; color: #00ff88; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .status { background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #00ff88; margin: 10px 0; }
+        .endpoint { background: #0d1117; padding: 10px; margin: 5px 0; border-left: 3px solid #00d4ff; }
+        .link { color: #00d4ff; text-decoration: none; }
+        .blink { animation: blink 1s infinite; }
+        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0.3; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ LancerPayBless</h1>
+            <p>Bless Network Payment Service</p>
+            <div class="status">
+                <span class="blink">●</span> Service Active | Chain ID: 2026
+            </div>
+        </div>
+        
+        <div class="status">
+            <h3>🌐 Frontend Application</h3>
+            <p>Access the full Web UI at: <a href="https://pay.web3lancer.website" class="link">pay.web3lancer.website</a></p>
+        </div>
+        
+        <div class="status">
+            <h3>🔌 API Endpoints</h3>
+            <div class="endpoint">POST /processPayment - Process direct payments</div>
+            <div class="endpoint">POST /createEscrow - Create freelancer escrow</div>
+            <div class="endpoint">POST /releasePayment - Release escrow funds</div>
+            <div class="endpoint">POST /createWallet - Generate new wallet</div>
+            <div class="endpoint">GET /status - Service health check</div>
+        </div>
+        
+        <div class="status">
+            <h3>💎 Supported Tokens</h3>
+            <p>BLS • USDC • ETH • USDT • BTC</p>
+        </div>
+        
+        <div class="status">
+            <h3>⚙️ Features</h3>
+            <p>• Web2 ↔ Web3 Bridge • Escrow Services • Milestone Payments • Real-time Sync</p>
+        </div>
+    </div>
+</body>
+</html>`;
+    }
+    
+    // Handle API requests
+    const path = request?.url || request?.path || '/';
+    const method = request?.method || 'GET';
+    
+    if (method === 'GET' && path === '/status') {
+      return JSON.stringify({
+        service: 'LancerPayBless',
+        status: 'active',
+        network: 'Bless Network',
+        chainId: 2026,
+        timestamp: new Date().toISOString(),
+        endpoints: ['/processPayment', '/createEscrow', '/releasePayment', '/createWallet'],
+        frontend: 'https://pay.web3lancer.website'
+      });
+    }
+    
+    // Initialize service for API calls
+    const lancerPay = new LancerPayBless({
+      web2PayApp: {
+        baseUrl: 'https://pay.web3lancer.website',
+        apiKey: process.env.BRIDGE_API_KEY
+      }
+    });
+    
+    await lancerPay.initialize();
+    
+    // Handle specific API endpoints
+    if (method === 'POST') {
+      const body = request?.body ? JSON.parse(request.body) : {};
+      
+      switch (path) {
+        case '/processPayment':
+          const result = await lancerPay.processPayment(body);
+          return JSON.stringify(result);
+          
+        case '/createWallet':
+          const wallet = await lancerPay.createWallet();
+          return JSON.stringify(wallet);
+          
+        case '/status':
+          return JSON.stringify({ status: 'active', timestamp: Date.now() });
+          
+        default:
+          return JSON.stringify({ error: 'Endpoint not found', available: ['/processPayment', '/createWallet', '/status'] });
+      }
+    }
+    
+    // Default response
+    return JSON.stringify({ 
+      message: 'LancerPayBless Service Active',
+      frontend: 'https://pay.web3lancer.website',
+      endpoints: ['/processPayment', '/createEscrow', '/createWallet', '/status']
+    });
+    
+  } catch (error) {
+    logger.error('Request handling error:', error);
+    return JSON.stringify({ 
+      error: 'Service error', 
+      message: error instanceof Error ? error.message : 'Unknown error',
+      service: 'LancerPayBless'
+    });
+  }
+}
+
+// Export for Blockless runtime
 const lancerPayBless = new LancerPayBless();
-export { lancerPayBless };
+export { lancerPayBless, handleRequest };
