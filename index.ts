@@ -2,12 +2,20 @@
 // This module provides Web3 payment processing capabilities on the Bless Network
 // It integrates with the Web2 foundation payment system and mirrors its functionality
 
+// Global type declarations for Bless environment
+declare global {
+  interface Console {
+    log: (message?: any, ...optionalParams: any[]) => void;
+    error: (message?: any, ...optionalParams: any[]) => void;
+    warn: (message?: any, ...optionalParams: any[]) => void;
+  }
+}
+
 // Logger implementation for Bless Network environment
 const logger = {
   info: (message: string, ...args: any[]) => console.log(`[BLESS-INFO] ${message}`, ...args),
   error: (message: string, ...args: any[]) => console.error(`[BLESS-ERROR] ${message}`, ...args),
-  warn: (message: string, ...args: any[]) => console.warn(`[BLESS-WARN] ${message}`, ...args),
-  debug: (message: string, ...args: any[]) => console.log(`[BLESS-DEBUG] ${message}`, ...args)
+  warn: (message: string, ...args: any[]) => console.warn(`[BLESS-WARN] ${message}`, ...args)
 };
 
 // Core interfaces mirroring Web2 foundation
