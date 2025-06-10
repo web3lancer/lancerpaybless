@@ -32,7 +32,7 @@ This integration connects the **Web2 Pay App** (Next.js frontend) with the **Ble
 - **Multi-token Support**: BLS, USDC, ETH, USDT, BTC
 
 ### 💼 **Web2 Integration**
-- **Payment Profiles**: Users can receive crypto via `pay.web3lancer.com/pay/username`
+- **Payment Profiles**: Users can receive crypto via `pay.web3lancer.website/pay/username`
 - **QR Code Generation**: Instant payment QR codes for any amount
 - **Request Management**: Create, track, and manage payment requests
 - **User Authentication**: Appwrite-based auth with KYC/2FA
@@ -128,7 +128,7 @@ npm install
 ## Support
 
 For issues or questions:
-- 📧 Email: support@web3lancer.com
+- 📧 Email: support@web3lancer.website
 - 🐛 Issues: GitHub repository
 - 📚 Docs: [Integration Guide](./docs/integration.md)
 
