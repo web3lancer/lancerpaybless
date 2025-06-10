@@ -134,4 +134,4 @@ For issues or questions:
 
 ---
 
-**Built with ❤️ for the Web3Lancer ecosystem**
+**Built with ❤️ for the Bless ecosystem**
